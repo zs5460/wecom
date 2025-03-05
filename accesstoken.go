@@ -12,7 +12,7 @@ type accessToken struct {
 }
 
 // getAccessToken 读取AccessToken
-func (s *server) getAccessToken() string {
+func (s *Server) getAccessToken() string {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	var err error
@@ -32,7 +32,7 @@ func (s *server) getAccessToken() string {
 	return s.accessToken.AccessToken
 }
 
-func (s *server) getAccessTokenFromNet() (err error) {
+func (s *Server) getAccessTokenFromNet() (err error) {
 	url := fmt.Sprintf(s.tokenUrl, s.appId, s.secret)
 	at := new(accessToken)
 	if err = getJson(url, at); err != nil {

@@ -10,7 +10,7 @@ import (
 
 // context 消息上下文
 type context struct {
-	server    *server
+	server    *Server
 	timestamp string
 	nonce     string
 	Msg       *WxMsg

@@ -46,7 +46,7 @@ type wxResp struct {
 }
 
 // to字段格式："userid1|userid2 deptid1|deptid2 tagid1|tagid2"
-func (s *server) newWxResp(msgType, to string) (r wxResp) {
+func (s *Server) newWxResp(msgType, to string) (r wxResp) {
 	toArr := strings.Split(to, " ")
 	r = wxResp{
 		ToUserName: cdata(toArr[0]),
@@ -75,7 +75,7 @@ type (
 )
 
 // NewText Text 文本消息
-func (s *server) NewText(to string, msg ...string) Text {
+func (s *Server) NewText(to string, msg ...string) Text {
 	txt := Text{
 		s.newWxResp("text", to),
 		content{cdata(strings.Join(msg, ""))},

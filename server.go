@@ -42,8 +42,8 @@ type WxConfig struct {
 	DataFormat     string // 数据格式:JSON、XML
 }
 
-// server 微信服务容器
-type server struct {
+// Server 微信服务容器
+type Server struct {
 	appId          string
 	agentId        int
 	secret         string
@@ -69,8 +69,8 @@ type server struct {
 }
 
 // New 新建微信服务容器
-func New(wc *WxConfig) *server {
-	s := &server{
+func New(wc *WxConfig) *Server {
+	s := &Server{
 		appId:          wc.AppId,
 		secret:         wc.Secret,
 		agentId:        wc.AgentId,
@@ -119,7 +119,7 @@ func New(wc *WxConfig) *server {
 }
 
 // 依据交互数据类型，从请求体中解析消息体
-func (s *server) decodeMsgFromRequest(r *http.Request, msg any) error {
+func (s *Server) decodeMsgFromRequest(r *http.Request, msg any) error {
 	if s.dataFormat == dataFormatXML {
 		return xml.NewDecoder(r.Body).Decode(msg)
 	} else if s.dataFormat == dataFormatJSON {
@@ -130,7 +130,7 @@ func (s *server) decodeMsgFromRequest(r *http.Request, msg any) error {
 }
 
 // 依据交互数据类型，从字符串中解析消息体
-func (s *server) decodeMsgFromString(str string, msg any) error {
+func (s *Server) decodeMsgFromString(str string, msg any) error {
 	if s.dataFormat == dataFormatXML {
 		return xml.Unmarshal([]byte(str), msg)
 	} else if s.dataFormat == dataFormatJSON {
@@ -141,7 +141,7 @@ func (s *server) decodeMsgFromString(str string, msg any) error {
 }
 
 // VerifyURL 验证URL,验证成功则返回标准请求载体（Msg已解密）
-func (s *server) VerifyURL(w http.ResponseWriter, r *http.Request) (ctx *context) {
+func (s *Server) VerifyURL(w http.ResponseWriter, r *http.Request) (ctx *context) {
 	println(r.Method, "|", r.URL.String())
 	ctx = &context{
 		server:    s,
@@ -206,7 +206,7 @@ func (s *server) VerifyURL(w http.ResponseWriter, r *http.Request) (ctx *context
 
 // decryptMsg 解密微信消息,密文string->base64Dec->aesDec->去除头部随机字串
 // AES加密的buf由16个字节的随机字符串、4个字节的msg_len(网络字节序)、msg和$AppId组成
-func (s *server) decryptMsg(msg string) (string, error) {
+func (s *Server) decryptMsg(msg string) (string, error) {
 	aesMsg, err := base64.StdEncoding.DecodeString(msg)
 	if err != nil {
 		return "", err
@@ -239,7 +239,7 @@ type wxRespEnc struct {
 
 // encryptMsg 加密普通回复(AES-CBC),打包成xml格式
 // AES加密的buf由16个字节的随机字符串、4个字节的msg_len(网络字节序)、msg和$AppId组成
-func (s *server) encryptMsg(msg []byte, timeStamp, nonce string) (re *wxRespEnc, err error) {
+func (s *Server) encryptMsg(msg []byte, timeStamp, nonce string) (re *wxRespEnc, err error) {
 	buf := new(bytes.Buffer)
 	err = binary.Write(buf, binary.BigEndian, int32(len(msg)))
 	if err != nil {
@@ -262,12 +262,12 @@ func (s *server) encryptMsg(msg []byte, timeStamp, nonce string) (re *wxRespEnc,
 }
 
 // AddMsg 添加队列消息
-func (s *server) AddMsg(v any) {
+func (s *Server) AddMsg(v any) {
 	s.msgQueue <- v
 }
 
 // SendMsg 发送消息
-func (s *server) SendMsg(v any) *WxErr {
+func (s *Server) SendMsg(v any) *WxErr {
 	url := s.msgUrl + s.getAccessToken()
 	body, err := postJson(url, v)
 	if err != nil {
@@ -283,7 +283,7 @@ func (s *server) SendMsg(v any) *WxErr {
 }
 
 // SendText 发送文本消息,过长时按500长度自动拆分
-func (s *server) SendText(to, msg string) *WxErr {
+func (s *Server) SendText(to, msg string) *WxErr {
 	const maxMsgLength = 500
 	length := utf8.RuneCountInString(msg)
 	parts := length/maxMsgLength + 1
